@@ -5,11 +5,13 @@ import tensorflow as tf
 from PIL import Image
 import matplotlib.pyplot as plt
 
+### Possible next steps:
+# Try on different dataset, eg.: path = '/mnt/c/Users/schuy/Pictures/yalefaces/test1'
+# Play around w architectures, understand model architecture better
+# Improve model performance
+# Design model performance characterization, eg. confusion matrix? 
 
-#path = '/mnt/c/Users/schuy/Pictures/yalefaces/test1'
-
-
-
+#%% Function definitions
 def load_img_dataset(path):
     files = [os.path.join(path,x) for x in os.listdir(path)]
     arrs = {}
@@ -60,8 +62,7 @@ y_tensor = y_data_format(y_train)
 
 print('X_TRAIN SHAPE:{} \n X_TRAIN TYPE:{}'.format(x_tensor.shape, type(x_tensor)))
 
-#%% 
-# Model inputs
+#%% Model inputs
 
 N=25000
 x_train = x_tensor[:N]
@@ -75,8 +76,7 @@ M=25
 x_val = x_tensor[-M:]
 y_val = y_tensor[-M:]
 
-#%%
-# Model action
+#%% Model action
 model.compile(optimizer='adam', 
     loss='categorical_crossentropy',
     )
@@ -85,30 +85,3 @@ history = model.fit(x_train, y_train, batch_size=64, epochs=10)
 preds = model.predict(x_val)
 print('y_pred:', np.argmax(preds, axis=1), '\n')
 print('y_true:', np.argmax(y_train[-M:], axis=1))
-
-
-
-'''
-N=15000
-x_data = x_train[:N].astype('float32')
-x_tensor = np.repeat(np.expand_dims(x_data, axis=-1), 3, axis=-1)
-
-
-inputs = keras.Input(shape=(28,28,3))
-outputs = model_1(inputs)
-
-model = keras.Model(inputs, outputs)
-
-M = 25
-x_val = x_train[-M:].astype('float32')
-y_val = one_hot(y_train[-M:].astype('int64'))
-preds = model.predict(x_val)
-
-model.compile(optimizer='adam', 
-    loss='categorical_crossentropy',
-    )
-history = model.fit(x_tensor, y_tensor, batch_size=64, epochs=5)
-
-print('Predictions:', preds, '\n')
-print('y_true:', y_train[-M:])
-'''
