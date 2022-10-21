@@ -35,8 +35,9 @@ def model_1(x_data):
     x = keras.layers.MaxPooling2D(pool_size=(2,2))(x)
     x = keras.layers.Conv2D(filters=32, kernel_size=(5,5), activation='relu')(x)
     x = keras.layers.MaxPooling2D(pool_size=(2,2))(x)
-    #x = keras.layers.Dense(4*4*32*10, activation='relu')(x)
-    x = keras.layers.GlobalAveragePooling2D()(x)
+    x = keras.layers.Flatten()(x)
+    x = keras.layers.Dense(10, activation='relu')(x)
+    #x = keras.layers.GlobalAveragePooling2D()(x)
     output = keras.layers.Dense(10, activation='softmax')(x)
     return output
 
@@ -52,36 +53,52 @@ def x_data_format(x_data):
 
 def y_data_format(y_data):
     one_hot = keras.layers.CategoryEncoding(num_tokens=10, output_mode='one_hot')
-    return one_hot(y_train.astype('int64'))
-
+    return one_hot(y_data.astype('int64'))
 
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
-x_tensor = x_data_format(x_train)
-y_tensor = y_data_format(y_train) 
-
-print('X_TRAIN SHAPE:{} \n X_TRAIN TYPE:{}'.format(x_tensor.shape, type(x_tensor)))
-
 #%% Model inputs
+print('\n MODEL INPUTS DEFINITIONS: \n')
 
-N=25000
-x_train = x_tensor[:N]
-y_train = y_tensor[:N]
+x_train_tensor = x_data_format(x_train)
+y_train_tensor = y_data_format(y_train) 
+
+x_test_tensor = x_data_format(x_test)
+y_test_tensor = y_data_format(y_test)
+
+print('X_TRAIN SHAPE:{} \n X_TRAIN TYPE:{} \n'.format(x_train_tensor.shape, type(x_train_tensor)))
+print('Y_TRAIN SHAPE', y_train_tensor.shape)
+print('X_TEST SHAPE', x_test_tensor.shape)
+print('Y_TEST SHAPE', y_test_tensor.shape)
+
+#N=25000
+N = int(x_train.shape[0])
+print('N={} TRAINING EXAMPLES \n'.format(N))
+x_train = x_train_tensor[:N]
+y_train = y_train_tensor[:N]
 
 inputs = keras.Input(shape=(28,28,3))
 outputs = model_1(inputs)
 model = keras.Model(inputs, outputs)
 
-M=25
-x_val = x_tensor[-M:]
-y_val = y_tensor[-M:]
+#model.summary() 
+
 
 #%% Model action
+print('------\n MODEL TRAINING \n ------')
+
 model.compile(optimizer='adam', 
     loss='categorical_crossentropy',
-    )
-history = model.fit(x_train, y_train, batch_size=64, epochs=10)
+    metrics=['accuracy', 'categorical_accuracy'])
 
-preds = model.predict(x_val)
+#print(x_train_tensor.shape, y_train_tensor.shape, x_test_tensor.shape, y_test_tensor.shape) 
+
+
+history = model.fit(x_train_tensor, y_train_tensor, 
+    validation_data=(x_test_tensor, y_test_tensor),
+    batch_size=128, epochs=10)
+
+print('-------\n MODEL PREDICTION \n -------')
+preds = model.predict(x_test_tensor[:50])
 print('y_pred:', np.argmax(preds, axis=1), '\n')
-print('y_true:', np.argmax(y_train[-M:], axis=1))
+print('y_true:', np.argmax(y_test_tensor[:50], axis=1))
